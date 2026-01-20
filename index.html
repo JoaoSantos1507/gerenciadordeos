@@ -1,0 +1,409 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sistema OS - Gestão</title>
+    <link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><text y=%22.9em%22 font-size=%2290%22>🛠️</text></svg>">
+    
+    <style>
+        /* --- ESTILOS VISUAIS (Mantidos da versão Premium) --- */
+        :root {
+            --bg-body: #121212; --bg-card: #1e1e1e; --text-main: #e0e0e0; --text-muted: #a0a0a0;
+            --input-bg: #2d2d2d; --input-border: #444;
+            --primary-gradient: linear-gradient(135deg, #6a11cb 0%, #2575fc 100%);
+            --secondary-gradient: linear-gradient(135deg, #11998e 0%, #38ef7d 100%);
+            --warning-gradient: linear-gradient(135deg, #f2994a 0%, #f2c94c 100%);
+            --danger-color: #ff4b2b; --shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+        }
+        body.light-theme {
+            --bg-body: #f0f2f5; --bg-card: #ffffff; --text-main: #333333; --text-muted: #666666;
+            --input-bg: #f9f9f9; --input-border: #ddd;
+            --primary-gradient: linear-gradient(135deg, #4facfe 0%, #00f2fe 100%);
+            --secondary-gradient: linear-gradient(135deg, #43e97b 0%, #38f9d7 100%);
+            --warning-gradient: linear-gradient(135deg, #fce38a 0%, #f38181 100%);
+            --shadow: 0 4px 15px rgba(0, 0, 0, 0.1);
+        }
+        body { font-family: 'Segoe UI', Roboto, sans-serif; background-color: var(--bg-body); color: var(--text-main); margin: 0; padding: 20px; transition: 0.3s; }
+        .container { max-width: 1000px; margin: 0 auto; }
+        
+        header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 20px; padding-bottom: 20px; border-bottom: 1px solid var(--input-border); }
+        h1 span { font-weight: 700; background: var(--primary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        
+        .theme-toggle { background: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-main); padding: 10px 15px; border-radius: 20px; cursor: pointer; transition: 0.3s; }
+        .card { background-color: var(--bg-card); padding: 25px; border-radius: 15px; box-shadow: var(--shadow); margin-bottom: 25px; transition: 0.3s; }
+        
+        /* Abas de Seleção */
+        .type-selector { display: flex; gap: 10px; margin-bottom: 20px; }
+        .type-btn { flex: 1; padding: 15px; border: 2px solid var(--input-border); background: var(--input-bg); color: var(--text-muted); border-radius: 10px; cursor: pointer; font-weight: bold; text-align: center; transition: 0.3s; }
+        .type-btn.active { border-color: #2575fc; color: #fff; background: rgba(37, 117, 252, 0.1); }
+        .type-btn.active-comp { border-color: #f2994a; color: #fff; background: rgba(242, 153, 74, 0.1); }
+        body.light-theme .type-btn.active, body.light-theme .type-btn.active-comp { color: #333; }
+
+        /* Formulário */
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .form-group { margin-bottom: 10px; }
+        label { display: block; margin-bottom: 5px; font-size: 0.9rem; color: var(--text-muted); }
+        input { width: 100%; padding: 12px; background-color: var(--input-bg); border: 1px solid var(--input-border); color: var(--text-main); border-radius: 8px; box-sizing: border-box; outline: none; transition: 0.3s; }
+        input:focus { border-color: #2575fc; }
+        
+        .input-total { font-weight: bold; font-size: 1.1rem; color: #2ecc71; background-color: rgba(46, 204, 113, 0.1); border-color: #2ecc71; cursor: not-allowed; }
+
+        /* Botões */
+        .btn { border: none; padding: 12px 25px; border-radius: 8px; font-size: 1rem; font-weight: bold; color: white; cursor: pointer; width: 100%; margin-top: 15px; text-transform: uppercase; }
+        .btn:hover { transform: translateY(-2px); box-shadow: 0 5px 15px rgba(0,0,0,0.3); }
+        .btn-primary { background: var(--primary-gradient); }
+        .btn-warning { background: var(--warning-gradient); color: #fff; text-shadow: 0 1px 2px rgba(0,0,0,0.3); }
+        .btn-delete-sm { width: auto; font-size: 0.8rem; padding: 5px 10px; margin-top: 10px; cursor: pointer; border-radius: 4px; border: 1px solid; background: transparent; color: var(--danger-color); border-color: var(--danger-color); margin-left: 5px; }
+
+        /* Lista e Calculadora */
+        #os-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 20px; }
+        .os-item { background: var(--bg-body); padding: 15px; border-radius: 10px; border: 1px solid var(--input-border); position: relative; overflow: hidden; }
+        .os-item.comp-item { border-left: 4px solid #f2994a; }
+        .os-item.std-item { border-left: 4px solid #2575fc; }
+        
+        .drop-zone { border: 2px dashed var(--input-border); border-radius: 15px; padding: 40px; text-align: center; cursor: pointer; transition: 0.3s; background: var(--input-bg); }
+        .drop-zone:hover { border-color: #2575fc; background-color: rgba(37, 117, 252, 0.05); }
+        #total-result { margin-top: 20px; font-size: 2rem; font-weight: bold; background: var(--secondary-gradient); -webkit-background-clip: text; -webkit-text-fill-color: transparent; text-align: center; }
+        
+        .hidden { display: none; }
+    </style>
+</head>
+<body>
+
+<div class="container">
+    <header>
+        <h1>Sistema <span>OS Manager</span></h1>
+        <button class="theme-toggle" onclick="toggleTheme()">☀️ / 🌙</button>
+    </header>
+
+    <div class="type-selector">
+        <div class="type-btn active" id="btn-padrao" onclick="mudarTipo('padrao')">🛠️ Ordem de Serviço (Padrão)</div>
+        <div class="type-btn" id="btn-comp" onclick="mudarTipo('compensacao')">⚠️ Ordem de Compensação</div>
+    </div>
+
+    <div class="card" id="card-formulario">
+        <h2 id="form-title">Nova Ordem de Serviço</h2>
+        
+        <div class="form-grid">
+            <div class="form-group">
+                <label>Técnico Responsável</label>
+                <input type="text" id="tecnico" placeholder="Seu Nome">
+            </div>
+            <div class="form-group">
+                <label>Data e Hora Agendada</label>
+                <input type="datetime-local" id="agendamento">
+            </div>
+
+            <div class="form-group campo-padrao">
+                <label>Prédio</label>
+                <input type="text" id="predio" placeholder="Ex: Edifício Solar">
+            </div>
+            <div class="form-group campo-padrao">
+                <label>Endereço</label>
+                <input type="text" id="endereco" placeholder="Rua, Número...">
+            </div>
+            <div class="form-group campo-padrao">
+                <label>Qtd. Elevadores</label>
+                <input type="number" id="elevadores" placeholder="1" oninput="calcularTotalAutomatico()">
+            </div>
+
+            <div class="form-group">
+                <label id="label-chamado">Chamado / Descrição</label>
+                <input type="text" id="chamado" placeholder="Descrição do serviço...">
+            </div>
+
+            <div class="form-group campo-padrao">
+                <label>Valor POR ELEVADOR (R$)</label>
+                <input type="text" id="valor_unitario" placeholder="R$ 0,00" oninput="mascaraMoeda(this); calcularTotalAutomatico()">
+            </div>
+            
+            <div class="form-group campo-comp hidden">
+                <label>Valor da Compensação (R$)</label>
+                <input type="text" id="valor_compensacao" placeholder="R$ 0,00" oninput="mascaraMoeda(this)">
+            </div>
+
+            <div class="form-group">
+                <label><strong>Valor Total Final (R$)</strong></label>
+                <input type="text" id="valor_total" class="input-total" readonly placeholder="R$ 0,00">
+            </div>
+        </div>
+
+        <button class="btn btn-primary" id="btn-acao" onclick="salvarEBaixar()">💾 Salvar OS & Baixar Arquivo</button>
+    </div>
+
+    <div class="card">
+        <h2>💰 Fechamento do Mês</h2>
+        <p style="color: var(--text-muted);">Arraste TODOS os arquivos (OS e Compensações) para somar.</p>
+        <div class="drop-zone" id="drop-zone" onclick="document.getElementById('fileInput').click()">
+            <p>📂 Arraste os arquivos .txt aqui</p>
+            <input type="file" id="fileInput" multiple style="display:none" onchange="calcularArquivos(this.files)">
+        </div>
+        <div id="total-result">Total: R$ 0,00</div>
+    </div>
+
+    <div class="card">
+        <h2>📡 Histórico (Tempo Real)</h2>
+        <div id="os-list">
+            <p style="text-align:center; color: var(--text-muted);">Carregando...</p>
+        </div>
+    </div>
+</div>
+
+<script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-app.js";
+    import { getDatabase, ref, push, onValue, remove } from "https://www.gstatic.com/firebasejs/9.22.0/firebase-database.js";
+
+    // --- ⬇️ COLE SUAS CREDENCIAIS DO FIREBASE AQUI ⬇️ ---
+    const firebaseConfig = {
+        apiKey: "SUA_API_KEY",
+        authDomain: "SEU_PROJETO.firebaseapp.com",
+        databaseURL: "https://SEU_PROJETO-default-rtdb.firebaseio.com",
+        projectId: "SEU_PROJETO",
+        storageBucket: "SEU_PROJETO.appspot.com",
+        messagingSenderId: "NUMERO",
+        appId: "ID_APP"
+    };
+    // --- ⬆️ FIM DAS CREDENCIAIS ⬆️ ---
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+    const osListRef = ref(db, 'ordens_servico');
+
+    window.modoAtual = 'padrao';
+
+    // --- INTERFACE ---
+    window.mudarTipo = function(tipo) {
+        window.modoAtual = tipo;
+        const btnPadrao = document.getElementById('btn-padrao');
+        const btnComp = document.getElementById('btn-comp');
+        const camposPadrao = document.querySelectorAll('.campo-padrao');
+        const camposComp = document.querySelectorAll('.campo-comp');
+        const btnAcao = document.getElementById('btn-acao');
+        const titulo = document.getElementById('form-title');
+        const labelChamado = document.getElementById('label-chamado');
+
+        camposPadrao.forEach(el => el.classList.add('hidden'));
+        camposComp.forEach(el => el.classList.add('hidden'));
+        btnPadrao.classList.remove('active');
+        btnComp.classList.remove('active-comp');
+        btnAcao.classList.remove('btn-primary', 'btn-warning');
+        
+        document.getElementById('valor_total').value = '';
+
+        if(tipo === 'padrao') {
+            camposPadrao.forEach(el => el.classList.remove('hidden'));
+            btnPadrao.classList.add('active');
+            btnAcao.classList.add('btn-primary');
+            btnAcao.innerText = "💾 Salvar OS & Baixar Arquivo";
+            titulo.innerText = "Nova Ordem de Serviço";
+            labelChamado.innerText = "Chamado / Descrição";
+        } else {
+            camposComp.forEach(el => el.classList.remove('hidden'));
+            btnComp.classList.add('active-comp');
+            btnAcao.classList.add('btn-warning');
+            btnAcao.innerText = "⚠️ Gerar Compensação";
+            titulo.innerText = "Nova Ordem de Compensação";
+            labelChamado.innerText = "Motivo da Compensação";
+        }
+    };
+
+    // --- CÁLCULOS E MÁSCARAS ---
+    window.mascaraMoeda = function(elemento) {
+        let valor = elemento.value.replace(/\D/g, "");
+        if (valor === "") { elemento.value = ""; return; }
+        valor = (parseFloat(valor) / 100).toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+        elemento.value = valor;
+    };
+
+    function parseCurrency(valorString) {
+        if(!valorString) return 0;
+        return parseFloat(valorString.replace("R$", "").replace(/\./g, "").replace(",", ".").trim());
+    }
+
+    function formatCurrency(valorFloat) {
+        return valorFloat.toLocaleString("pt-BR", { style: "currency", currency: "BRL" });
+    }
+
+    window.calcularTotalAutomatico = function() {
+        if(window.modoAtual !== 'padrao') return;
+        const qtd = parseFloat(document.getElementById('elevadores').value) || 0;
+        const valUnitario = parseCurrency(document.getElementById('valor_unitario').value);
+        const total = qtd * valUnitario;
+        document.getElementById('valor_total').value = formatCurrency(total);
+    };
+
+    // --- SALVAR ---
+    window.salvarEBaixar = function() {
+        const tecnico = document.getElementById('tecnico').value;
+        const chamado = document.getElementById('chamado').value;
+        const agendamentoRaw = document.getElementById('agendamento').value;
+        
+        let agendamentoFmt = agendamentoRaw ? new Date(agendamentoRaw).toLocaleString('pt-BR') : "Imediato / Não agendado";
+        let dadosParaSalvar = {};
+        
+        if(window.modoAtual === 'padrao') {
+            const predio = document.getElementById('predio').value;
+            const endereco = document.getElementById('endereco').value;
+            const elevadores = document.getElementById('elevadores').value;
+            const valorUnit = document.getElementById('valor_unitario').value;
+            const valorTotal = document.getElementById('valor_total').value;
+
+            if(!predio || !valorTotal || valorTotal === 'R$ 0,00') { alert("Preencha Prédio, Elevadores e Valor Unitário."); return; }
+
+            dadosParaSalvar = {
+                tipo: 'padrao', agendamento: agendamentoFmt,
+                tecnico, chamado, predio, endereco, elevadores, 
+                valor_unitario: valorUnit, valor_total: valorTotal
+            };
+        } else {
+            const valorComp = document.getElementById('valor_compensacao').value;
+            if(!chamado || !valorComp) { alert("Preencha o Motivo e o Valor da Compensação."); return; }
+
+            dadosParaSalvar = {
+                tipo: 'compensacao', agendamento: agendamentoFmt,
+                tecnico, chamado, valor_total: valorComp
+            };
+        }
+
+        push(osListRef, dadosParaSalvar);
+        gerarTxt(dadosParaSalvar);
+        limparFormulario();
+    };
+
+    function limparFormulario() {
+        document.querySelectorAll('input').forEach(input => input.value = '');
+        document.getElementById('valor_total').value = '';
+    }
+
+    // --- GERAR TXT (SEM DATA EMISSÃO) ---
+    window.gerarTxt = function(dados) {
+        let conteudo = "";
+        let nomeArquivo = "";
+
+        if(dados.tipo === 'padrao') {
+            conteudo = `
+--- ORDEM DE SERVIÇO ---
+AGENDADO: ${dados.agendamento}
+Prédio: ${dados.predio}
+Endereço: ${dados.endereco}
+Chamado: ${dados.chamado}
+------------------------
+Quantidade de elevadores: ${dados.elevadores}
+Valor por Elevador: ${dados.valor_unitario}
+------------------------
+Valor Total: ${dados.valor_total}
+------------------------`.trim();
+            nomeArquivo = `OS_${dados.predio.replace(/\s+/g, '_')}_${Date.now()}.txt`;
+        } else {
+            conteudo = `
+--- ORDEM DE COMPENSAÇÃO ---
+DATA PREVISTA: ${dados.agendamento}
+Motivo: ${dados.chamado}
+Técnico Solicitante: ${dados.tecnico}
+------------------------
+Valor Total: ${dados.valor_total}
+------------------------`.trim();
+            nomeArquivo = `COMPENSACAO_${dados.tecnico.replace(/\s+/g, '_')}_${Date.now()}.txt`;
+        }
+
+        const element = document.createElement('a');
+        const file = new Blob([conteudo], {type: 'text/plain'});
+        element.href = URL.createObjectURL(file);
+        element.download = nomeArquivo;
+        document.body.appendChild(element);
+        element.click();
+        document.body.removeChild(element);
+    };
+
+    // --- LISTAGEM ---
+    onValue(osListRef, (snapshot) => {
+        const listDiv = document.getElementById('os-list');
+        listDiv.innerHTML = "";
+        const data = snapshot.val();
+
+        if (data) {
+            Object.entries(data).reverse().forEach(([key, item]) => {
+                const card = document.createElement('div');
+                const isComp = item.tipo === 'compensacao';
+                card.className = `os-item ${isComp ? 'comp-item' : 'std-item'}`;
+                
+                let htmlContent = "";
+                if(!isComp) {
+                    htmlContent = `
+                        <h3>🏢 ${item.predio}</h3>
+                        <p><strong>🔧 Serviço:</strong> ${item.chamado}</p>
+                        <p><strong>📅 Agendado:</strong> ${item.agendamento}</p>
+                        <p><strong>💰 Total:</strong> ${item.valor_total} <small>(${item.elevadores}x ${item.valor_unitario})</small></p>
+                    `;
+                } else {
+                    htmlContent = `
+                        <h3 style="color:#f2994a">⚠️ Compensação</h3>
+                        <p><strong>📝 Motivo:</strong> ${item.chamado}</p>
+                        <p><strong>📅 Data:</strong> ${item.agendamento}</p>
+                        <p><strong>💰 Valor:</strong> ${item.valor_total}</p>
+                    `;
+                }
+                htmlContent += `
+                    <div style="margin-top:10px; border-top:1px solid var(--input-border); padding-top:10px;">
+                         <button class="btn-delete-sm" onclick="deletarOS('${key}')">Excluir</button>
+                    </div>
+                `;
+                card.innerHTML = htmlContent;
+                listDiv.appendChild(card);
+            });
+        } else {
+            listDiv.innerHTML = "<p style='color:var(--text-muted); text-align:center;'>Nenhum registro encontrado.</p>";
+        }
+    });
+
+    window.deletarOS = function(key) {
+        if(confirm("Excluir este registro permanentemente?")) remove(ref(db, `ordens_servico/${key}`));
+    };
+
+    // --- CALCULADORA ---
+    window.calcularArquivos = function(files) {
+        let total = 0;
+        let lidos = 0;
+        if(files.length === 0) return;
+        document.getElementById('total-result').innerText = "Somando...";
+        Array.from(files).forEach(file => {
+            const reader = new FileReader();
+            reader.onload = function(e) {
+                const text = e.target.result;
+                const linhas = text.split('\n');
+                linhas.forEach(linha => {
+                    if(linha.includes("Valor Total:")) {
+                        let valorLimpo = linha.split(':')[1].trim()
+                            .replace("R$", "").replace(/\./g, "").replace(",", ".");
+                        let valorNumerico = parseFloat(valorLimpo);
+                        if(!isNaN(valorNumerico)) total += valorNumerico;
+                    }
+                });
+                lidos++;
+                if(lidos === files.length) {
+                    document.getElementById('total-result').innerText = 
+                        "Total Mês: " + total.toLocaleString('pt-BR', { style: 'currency', currency: 'BRL' });
+                }
+            };
+            reader.readAsText(file);
+        });
+    };
+
+    const dropZone = document.getElementById('drop-zone');
+    ['dragenter', 'dragover', 'dragleave', 'drop'].forEach(eventName => {
+        dropZone.addEventListener(eventName, (e) => { e.preventDefault(); e.stopPropagation(); }, false);
+    });
+    dropZone.addEventListener('drop', (e) => calcularArquivos(e.dataTransfer.files));
+</script>
+
+<script>
+    function toggleTheme() {
+        document.body.classList.toggle('light-theme');
+        localStorage.setItem('theme', document.body.classList.contains('light-theme') ? 'light' : 'dark');
+    }
+    if(localStorage.getItem('theme') === 'light') document.body.classList.add('light-theme');
+</script>
+
+</body>
+</html>
